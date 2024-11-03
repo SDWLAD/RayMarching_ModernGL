@@ -2,11 +2,20 @@
 
 uniform vec2 resolution;
 
+float sphere(vec3 p, vec3 position, float radius) {
+    return length(p-position) - radius;
+}
+
+float map(vec3 p) {
+    float sphere1 = sphere(p, vec3(0, 0, 0), 1.0);
+    return sphere1;
+}
+
 float RayMarch(vec3 ro, vec3 rd){
     float hit, object;
     for (int i = 0; i < 256; i++) {
         vec3 p = ro + object * rd;
-        hit = length(p)-1.0;
+        hit = map(p);
         object += hit;
         if (abs(hit) < 0.01 || object > 500) break;
     }
