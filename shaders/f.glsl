@@ -6,9 +6,15 @@ float sphere(vec3 p, vec3 position, float radius) {
     return length(p-position) - radius;
 }
 
+float box(vec3 p, vec3 position, vec3 size) {
+  vec3 q = abs(p-position) - size;
+  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
+
 float map(vec3 p) {
     float sphere1 = sphere(p, vec3(0, 0, 0), 1.0);
-    return sphere1;
+    float box1 = box(p, vec3(0, 0, 0), vec3(1, 1, 1));
+    return box1;
 }
 
 float RayMarch(vec3 ro, vec3 rd){
