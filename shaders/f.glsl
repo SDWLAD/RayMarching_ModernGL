@@ -12,9 +12,9 @@ float box(vec3 p, vec3 position, vec3 size) {
 }
 
 float map(vec3 p) {
-    float sphere1 = sphere(p, vec3(0, 0, 0), 1.0);
-    float box1 = box(p, vec3(0, 0, 0), vec3(1, 1, 1));
-    return box1;
+    float sphere1 = sphere(p, vec3(-1.5, 0, 0), 1.0);
+    float box1 = box(p, vec3(1.5, 0, 0), vec3(1, 1, 1));
+    return min(sphere1, box1);
 }
 
 float RayMarch(vec3 ro, vec3 rd){
