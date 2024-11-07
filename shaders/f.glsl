@@ -2,6 +2,14 @@
 
 uniform vec2 resolution;
 
+vec3 light(vec3 n) {
+    vec3 lightDir = normalize(vec3(1, 1, -1));
+
+    float diffuse = max(dot(n, lightDir), 0.0);
+
+    return vec3(diffuse);
+}
+
 float sphere(vec3 p, vec3 position, float radius) {
     return length(p-position) - radius;
 }
@@ -46,7 +54,7 @@ void main(){
     vec3 n = getNormal(p);
 
     if (dist < 256.0) {
-        color = n;
+        color = light(n);
     }
 
     gl_FragColor = vec4(color, 1);
