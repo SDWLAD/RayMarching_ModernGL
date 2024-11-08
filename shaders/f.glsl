@@ -19,10 +19,15 @@ float box(vec3 p, vec3 position, vec3 size) {
   return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
 }
 
+float plane(vec3 p, float position) {
+    return p.y - position;
+}
+
 float map(vec3 p) {
     float sphere1 = sphere(p, vec3(-1.5, 0, 0), 1.0);
     float box1 = box(p, vec3(1.5, 0, 0), vec3(1, 1, 1));
-    return min(sphere1, box1);
+    float plane = plane(p, -2);
+    return min(plane, min(sphere1, box1));
 }
 
 float RayMarch(vec3 ro, vec3 rd){
