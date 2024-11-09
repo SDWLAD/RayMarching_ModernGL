@@ -2,6 +2,13 @@
 
 uniform vec2 resolution;
 
+float smin( float a, float b, float k )
+{
+    k *= 2.0;
+    float x = b-a;
+    return 0.5*( a+b-sqrt(x*x+k*k) );
+}
+
 vec3 light(vec3 n) {
     vec3 lightDir = normalize(vec3(1, 1, -1));
 
@@ -27,7 +34,7 @@ float map(vec3 p) {
     float sphere1 = sphere(p, vec3(-1.5, 0, 0), 1.0);
     float box1 = box(p, vec3(1.5, 0, 0), vec3(1, 1, 1));
     float plane = plane(p, -2);
-    return min(plane, min(sphere1, box1));
+    return min(plane, smin(sphere1, box1, 0.5));
 }
 
 float RayMarch(vec3 ro, vec3 rd){
