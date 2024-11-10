@@ -2,6 +2,11 @@
 
 uniform vec2 resolution;
 
+struct Hit {
+    float dist;
+    int iter;
+};
+
 float smin( float a, float b, float k )
 {
     k *= 2.0;
@@ -9,12 +14,15 @@ float smin( float a, float b, float k )
     return 0.5*( a+b-sqrt(x*x+k*k) );
 }
 
-vec3 light(vec3 n) {
+vec3 light(vec3 n, int i) {
     vec3 lightDir = normalize(vec3(1, 1, -1));
 
     float diffuse = max(dot(n, lightDir), 0.0);
+    float occ = (float(i) / 256.0);
+    occ = 1 - occ;
+    occ *= occ;
 
-    return vec3(diffuse);
+    return vec3(diffuse*occ);
 }
 
 float sphere(vec3 p, vec3 position, float radius) {
@@ -37,15 +45,17 @@ float map(vec3 p) {
     return min(plane, smin(sphere1, box1, 0.5));
 }
 
-float RayMarch(vec3 ro, vec3 rd){
+Hit RayMarch(vec3 ro, vec3 rd){
     float hit, object;
+    int it = 0;
     for (int i = 0; i < 256; i++) {
+        it = i;
         vec3 p = ro + object * rd;
         hit = map(p);
         object += hit;
         if (abs(hit) < 0.01 || object > 500) break;
     }
-    return object;
+    return Hit(object, it);
 }
 
 vec3 getNormal(vec3 p) {
@@ -61,12 +71,13 @@ void main(){
     vec3 ro = vec3(0, 2, -5);
     vec3 rd = normalize(vec3(uv, 1));
 
-    float dist = RayMarch(ro, rd);
+    Hit hit = RayMarch(ro, rd);
+    float dist = hit.dist;
     vec3 p = ro + rd * dist;
     vec3 n = getNormal(p);
 
     if (dist < 256.0) {
-        color = light(n);
+        color = light(n, hit.iter);
     }
 
     gl_FragColor = vec4(color, 1);
