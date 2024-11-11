@@ -14,15 +14,23 @@ float smin( float a, float b, float k )
     return 0.5*( a+b-sqrt(x*x+k*k) );
 }
 
-vec3 light(vec3 n, int i) {
+vec3 light(vec3 n, int i, vec3 ro, vec3 p) {
     vec3 lightDir = normalize(vec3(1, 1, -1));
-
     float diffuse = max(dot(n, lightDir), 0.0);
-    float occ = (float(i) / 256.0);
+    vec3 col = vec3(diffuse);
+
+    float occ = (float(i) / 512.0);
     occ = 1 - occ;
     occ *= occ;
+    col *= occ;
 
-    return vec3(diffuse*occ);
+    float fog = length(p - ro);
+    fog /= 256;
+    fog = clamp(fog, 0, 1);
+    fog *= fog;
+    col = col * (1 - fog) + 0.1 * fog;
+
+    return col;
 }
 
 float sphere(vec3 p, vec3 position, float radius) {
@@ -77,7 +85,7 @@ void main(){
     vec3 n = getNormal(p);
 
     if (dist < 256.0) {
-        color = light(n, hit.iter);
+        color = light(n, hit.iter, ro, p);
     }
 
     gl_FragColor = vec4(color, 1);
