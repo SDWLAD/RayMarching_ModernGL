@@ -1,6 +1,10 @@
 import moderngl_window as mglw
 
 
+class Camera:
+    def __init__(self, position):
+        self.position = position
+
 class App(mglw.WindowConfig):
     window_size = 1920, 1080
     resource_dir = 'shaders'
@@ -13,13 +17,16 @@ class App(mglw.WindowConfig):
         self.prog = self.load_program(vertex_shader='v.glsl', fragment_shader='f.glsl')
         self.set_uniform('resolution', self.window_size)
 
+        self.camera = Camera((0, 2, -10))
+
     def set_uniform(self, u_name, u_value):
         try:
             self.prog[u_name] = u_value
         except KeyError:...
     
     def render(self, time, frame_time):
-        self.ctx.clear()
+        self.ctx.clear() 
+        self.set_uniform('ro', self.camera.position)
         self.quad.render(self.prog)
 
 if __name__ == '__main__':

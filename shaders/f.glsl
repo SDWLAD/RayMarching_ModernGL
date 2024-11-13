@@ -1,6 +1,7 @@
 #version 330
 
 uniform vec2 resolution;
+uniform vec3 ro;
 
 struct Hit {
     float dist;
@@ -76,7 +77,6 @@ void main(){
     vec2 uv = (2.0 * gl_FragCoord.xy - resolution.xy) / resolution.y;
     vec3 color = vec3(0, 0, 0);
 
-    vec3 ro = vec3(0, 2, -5);
     vec3 rd = normalize(vec3(uv, 1));
 
     Hit hit = RayMarch(ro, rd);
