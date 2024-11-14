@@ -2,6 +2,11 @@
 
 uniform vec2 resolution;
 uniform vec3 ro;
+uniform vec3 rot;
+
+void pR(inout vec2 p, float a) {
+	p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
+}
 
 struct Hit {
     float dist;
@@ -78,6 +83,10 @@ void main(){
     vec3 color = vec3(0, 0, 0);
 
     vec3 rd = normalize(vec3(uv, 1));
+
+    pR(rd.yz, rot.x);
+    pR(rd.xz, rot.y);
+    pR(rd.xy, rot.z);
 
     Hit hit = RayMarch(ro, rd);
     float dist = hit.dist;
