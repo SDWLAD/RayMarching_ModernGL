@@ -1,14 +1,8 @@
-# import moderngl_window as mglw
+from camera import Camera
 import pygame as pg
 import moderngl as mgl
 from pygame.locals import *
 import numpy as np
-
-class Camera:
-    def __init__(self, position, rotation):
-        self.position = position
-        self.rotation = rotation
-
 
 class Engine:
     def __init__(self):
