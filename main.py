@@ -22,7 +22,7 @@ class Engine:
         self.on_init()
     
     def on_init(self):
-        self.camera = Camera(pg.Vector3(0, 2, -10), pg.Vector3(0, 0, 0))
+        self.camera = Camera(pg.Vector3(0, 2, -10))
         self.prog = self.get_program()
 
         self.prog['resolution'] = (1920, 1080)
@@ -51,6 +51,8 @@ class Engine:
     def update(self):
         self.prog['ro'] = self.camera.position
         self.prog['rot'] = self.camera.rotation
+
+        self.camera.update()
 
     def run(self):
         while self.is_running:
