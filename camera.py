@@ -13,3 +13,4 @@ class Camera:
         mouse_dy, mouse_dx = pg.mouse.get_rel()
         self.rotation.x -= mouse_dx * self.mouse_sensitivity
         self.rotation.y += mouse_dy * self.mouse_sensitivity
+        pg.mouse.set_pos((400, 300))

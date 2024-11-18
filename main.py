@@ -5,17 +5,18 @@ from pygame.locals import *
 import numpy as np
 
 class Engine:
+    screen_size = (1920, 1080)
+
     def __init__(self):
         pg.init()
 
-        self.screen = pg.display.set_mode((1920, 1080), DOUBLEBUF | OPENGL | FULLSCREEN)
+        self.screen = pg.display.set_mode(self.screen_size, DOUBLEBUF | OPENGL | FULLSCREEN, vsync=1)
         self.ctx = mgl.create_context()
 
         self.clock = pg.time.Clock()
         self.delta_time = 0
         self.time = 0
 
-        pg.event.set_grab(True)
         pg.mouse.set_visible(False)
 
         self.is_running = True
@@ -25,7 +26,7 @@ class Engine:
         self.camera = Camera(pg.Vector3(0, 2, -10))
         self.prog = self.get_program()
 
-        self.prog['resolution'] = (1920, 1080)
+        self.prog['resolution'] = self.screen_size
 
         self.vao = self.ctx.simple_vertex_array(self.prog, self.ctx.buffer(np.array([[-1, -1], [1, -1], [-1, 1], [1, 1]], dtype=np.float32)), 'in_vert')
 
