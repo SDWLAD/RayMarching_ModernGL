@@ -21,7 +21,7 @@ class Engine:
 
         self.is_running = True
         self.on_init()
-    
+
     def on_init(self):
         self.camera = Camera(pg.Vector3(0, 2, -10))
         self.prog = self.get_program()
