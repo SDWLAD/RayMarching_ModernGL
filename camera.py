@@ -27,10 +27,12 @@ class Camera:
         cos_p = math.cos(self.rotation.y)
 
         forward = pg.Vector3(sin_p, cos_p * sin_y, cos_p * cos_y)
-        # right = pg.Vector3(cos_y, -sin_y, 0)
+        right = pg.Vector3(cos_y, -sin_y, 0)
         up = pg.Vector3(0, 1, 0)
 
         if key_state[pg.K_w]: self.position += forward * self.move_speed
         if key_state[pg.K_s]: self.position -= forward * self.move_speed
+        if key_state[pg.K_d]: self.position += right * self.move_speed
+        if key_state[pg.K_a]: self.position -= right * self.move_speed
         if key_state[pg.K_SPACE]: self.position += up * self.move_speed
         if key_state[pg.K_LSHIFT]: self.position -= up * self.move_speed
