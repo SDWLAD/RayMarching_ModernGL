@@ -48,6 +48,13 @@ float box(vec3 p, vec3 position, vec3 size) {
   return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
 }
 
+float torus(vec3 p, vec3 position, vec2 size)
+{
+  vec2 q = vec2(length((p-position).xz)-size.x,(p-position).y);
+  return length(q)-size.y;
+}
+
+
 float plane(vec3 p, float position) {
     return p.y - position;
 }
@@ -55,8 +62,9 @@ float plane(vec3 p, float position) {
 float map(vec3 p) {
     float sphere1 = sphere(p, vec3(-1.5, 0, 0), 1.0);
     float box1 = box(p, vec3(1.5, 0, 0), vec3(1, 1, 1));
+    float torus1 = torus(p, vec3(0, 3, 0), vec2(5, 1));
     float plane = plane(p, -2);
-    return min(plane, smin(sphere1, box1, 0.5));
+    return min(torus1, min(plane, smin(sphere1, box1, 0.5)));
 }
 
 Hit RayMarch(vec3 ro, vec3 rd){
