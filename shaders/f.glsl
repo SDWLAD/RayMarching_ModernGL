@@ -13,12 +13,26 @@ struct Hit {
     int iter;
 };
 
-float smin( float a, float b, float k )
-{
+
+float Union(float a, float b) {
+    return min(a, b);
+}
+
+float Substract(float a, float b) {
+    return max(-a, b);
+}
+
+float Intersect(float a, float b) {
+    return max(a, b);
+}
+
+float SoftUnion(float a, float b, float k) {
     k *= 2.0;
     float x = b-a;
     return 0.5*( a+b-sqrt(x*x+k*k) );
 }
+
+
 
 float sphere(vec3 p, vec3 position, float radius) {
     return length(p-position) - radius;
@@ -41,11 +55,19 @@ float plane(vec3 p, float position) {
 }
 
 float map(vec3 p) {
-    float sphere1 = sphere(p, vec3(-1.5, 0, 0), 1.0);
-    float box1 = box(p, vec3(1.5, 0, 0), vec3(1, 1, 1));
-    float torus1 = torus(p, vec3(0, 3, 0), vec2(5, 1));
-    float plane = plane(p, -2);
-    return min(torus1, min(plane, smin(sphere1, box1, 0.5)));
+    float sphere1 = sphere(p, vec3(0, 0, 0), 1.3);
+    float box1 = box(p, vec3(0, 0, 0), vec3(1, 1, 1));
+    float torus1 = torus(p, vec3(0, 0, 0), vec2(1.2, 0.2));
+    float plane = plane(p, 0);
+
+
+    float SphereXBox = Substract(sphere1, box1);
+    float TorusXPrevious = SoftUnion(torus1, SphereXBox, 0.1);
+    float PlaneXPrevious = Intersect(plane, TorusXPrevious);
+
+    float Final = PlaneXPrevious;
+
+    return Final;
 }
 
 float raymarchLight(vec3 ro, vec3 rd)
@@ -64,8 +86,8 @@ float raymarchLight(vec3 ro, vec3 rd)
 }
 
 vec3 light(vec3 n, int i, vec3 ro, vec3 p) {
-    vec3 lightDir = normalize(vec3(1, 1, -1));
-    float diffuse = max(dot(n, lightDir), 0.0);
+    vec3 lightDir = normalize(vec3(-2, 4, -2) - p);
+    float diffuse = clamp(dot(n, lightDir) * 0.5 + 0.5, 0, 1);
     
     float d = raymarchLight(p + n * 0.1 * 10, lightDir);
     d += 1;
