@@ -63,7 +63,7 @@ float map(vec3 p) {
 
     float SphereXBox = Substract(sphere1, box1);
     float TorusXPrevious = SoftUnion(torus1, SphereXBox, 0.1);
-    float PlaneXPrevious = Intersect(plane, TorusXPrevious);
+    float PlaneXPrevious = Substract(TorusXPrevious, plane);
 
     float Final = PlaneXPrevious;
 
