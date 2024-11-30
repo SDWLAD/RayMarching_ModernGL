@@ -55,48 +55,60 @@ float plane(vec3 p, float position) {
 }
 
 float map(vec3 p) {
-    float sphere1 = sphere(p, vec3(0, 0, 0), 1.3);
-    float box1 = box(p, vec3(0, 0, 0), vec3(1, 1, 1));
-    float torus1 = torus(p, vec3(0, 0, 0), vec2(1.2, 0.2));
-    float plane = plane(p, 0);
+    // float sphere1 = sphere(p, vec3(0, 0, 0), 1.3);
+    // float box1 = box(p, vec3(0, 0, 0), vec3(1, 1, 1));
+    // float torus1 = torus(p, vec3(0, 0, 0), vec2(1.2, 0.2));
+    // float plane = plane(p, 0);
 
 
-    float SphereXBox = Substract(sphere1, box1);
-    float TorusXPrevious = SoftUnion(torus1, SphereXBox, 0.1);
-    float PlaneXPrevious = Substract(TorusXPrevious, plane);
+    // float SphereXBox = Substract(sphere1, box1);
+    // float TorusXPrevious = SoftUnion(torus1, SphereXBox, 0.1);
+    // float PlaneXPrevious = Substract(TorusXPrevious, plane);
+
+    float sphere1 = sphere(p, vec3(2, 0, 0), 1.3);
+    float box1 = box(p, vec3(-2, 0, 0), vec3(1, 1, 1));
+    float torus1 = torus(p, vec3(0, 4, 0), vec2(1.2, 0.2));
+    float plane = plane(p, -2);
+
+
+    float SphereXBox = Union(sphere1, box1);
+    float TorusXPrevious = Union(torus1, SphereXBox);
+    float PlaneXPrevious = Union(TorusXPrevious, plane);
 
     float Final = PlaneXPrevious;
 
     return Final;
 }
 
-float raymarchLight(vec3 ro, vec3 rd)
-{
-    float dO = 0;
-    float md = 1;
-    for (int i = 0; i < 20; i++)
-    {
-        vec3 p = ro + rd * dO;
-        float dS = map(p);
-        md = min(md, dS);
-        dO += dS;
-        if(dO > 50 || dS < 0.1) break;
+Hit RayMarch(vec3 ro, vec3 rd){
+    float hit = 0;
+    float object=0;
+    int it = 0;
+    for (int i = 0; i < 256; i++) {
+        it = i;
+        vec3 p = ro + object * rd;
+        hit = map(p);
+        object += hit;
+        if (abs(hit) < 0.01 || object > 500) break;
     }
-    return md;
+    return Hit(object, it);
 }
 
 vec3 light(vec3 n, int i, vec3 ro, vec3 p) {
-    vec3 lightDir = normalize(vec3(-2, 4, -2) - p);
-    float diffuse = clamp(dot(n, lightDir) * 0.5 + 0.5, 0, 1);
+    vec3 lightPos = normalize(vec3(0, 1, 0));
+    float diffuse = clamp(dot(n, lightPos) * 0.5 + 0.5, 0, 1);
     
-    float d = raymarchLight(p + n * 0.1 * 10, lightDir);
-    d += 1;
-    d = clamp(d, 0, 1);
-    diffuse *= d;
+    // float d = raymarchLight(p+n, lightDir);
+    // // d += 1;
+    // d = clamp(d, 0, 1);
+    // diffuse *= d;
     
+    float d = RayMarch(p + n * 0.02, normalize(lightPos)).dist;
+    if (d < length(lightPos - p)) diffuse *= clamp(d*0.5+0.5, 0, 1);
+
     vec3 col = vec3(diffuse);
 
-    float occ = (float(i) / 512.0);
+    float occ = (float(i)/256.0);
     occ = 1 - occ;
     occ *= occ;
     col *= occ;
@@ -108,19 +120,6 @@ vec3 light(vec3 n, int i, vec3 ro, vec3 p) {
     col = col * (1 - fog) + 0.1 * fog;
 
     return col;
-}
-
-Hit RayMarch(vec3 ro, vec3 rd){
-    float hit, object;
-    int it = 0;
-    for (int i = 0; i < 256; i++) {
-        it = i;
-        vec3 p = ro + object * rd;
-        hit = map(p);
-        object += hit;
-        if (abs(hit) < 0.01 || object > 500) break;
-    }
-    return Hit(object, it);
 }
 
 vec3 getNormal(vec3 p) {
