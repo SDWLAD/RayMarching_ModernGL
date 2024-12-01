@@ -94,32 +94,22 @@ Hit RayMarch(vec3 ro, vec3 rd){
     return Hit(object, it);
 }
 
-vec3 light(vec3 n, int i, vec3 ro, vec3 p) {
-    vec3 lightPos = normalize(vec3(0, 1, 0));
-    float diffuse = clamp(dot(n, lightPos) * 0.5 + 0.5, 0, 1);
-    
-    // float d = raymarchLight(p+n, lightDir);
-    // // d += 1;
-    // d = clamp(d, 0, 1);
-    // diffuse *= d;
-    
+vec3 getLight(vec3 p, vec3 rd, vec3 n) {
+    vec3 lightPos = vec3(10.0, 55.0, -20.0);
+    vec3 L = normalize(lightPos - p);
+    vec3 V = -rd;
+    vec3 R = reflect(-L, n);
+
+    vec3 specColor = vec3(0.5);
+    vec3 specular = specColor * pow(clamp(dot(R, V), 0.0, 1.0), 10.0);
+    vec3 diffuse = vec3(clamp(dot(L, n), 0.0, 1.0));
+    vec3 ambient = vec3(0.05);
+    vec3 fresnel = vec3(0.25 * pow(1.0 + dot(rd, n), 3.0));
+
     float d = RayMarch(p + n * 0.02, normalize(lightPos)).dist;
-    if (d < length(lightPos - p)) diffuse *= clamp(d*0.5+0.5, 0, 1);
+    if (d < length(lightPos - p)) return ambient + fresnel;
 
-    vec3 col = vec3(diffuse);
-
-    float occ = (float(i)/256.0);
-    occ = 1 - occ;
-    occ *= occ;
-    col *= occ;
-
-    float fog = length(p - ro);
-    fog /= 256;
-    fog = clamp(fog, 0, 1);
-    fog *= fog;
-    col = col * (1 - fog) + 0.1 * fog;
-
-    return col;
+    return diffuse + ambient + specular + fresnel;
 }
 
 vec3 getNormal(vec3 p) {
@@ -144,8 +134,8 @@ void main(){
     vec3 n = getNormal(p);
 
     if (dist < 256.0) {
-        color = light(n, hit.iter, ro, p);
+        color = getLight(p, rd, n);
     }
 
-    gl_FragColor = vec4(color, 1);
+    gl_FragColor = vec4(pow(color, vec3(1/2.2)), 1);
 }
