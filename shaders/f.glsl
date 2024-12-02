@@ -108,28 +108,52 @@ Hit RayMarch(vec3 ro, vec3 rd){
     return object;
 }
 
-vec3 getLight(vec3 p, vec3 rd, vec3 n, vec3 color) {
-    vec3 lightPos = vec3(10.0, 55.0, -20.0);
-    vec3 L = normalize(lightPos - p);
-    vec3 V = -rd;
-    vec3 R = reflect(-L, n);
-
-    vec3 specColor = vec3(0.5);
-    vec3 specular = specColor * pow(clamp(dot(R, V), 0.0, 1.0), 10.0);
-    vec3 diffuse = color * vec3(clamp(dot(L, n), 0.0, 1.0));
-    vec3 ambient = color * vec3(0.05);
-    vec3 fresnel = color *  vec3(0.25 * pow(1.0 + dot(rd, n), 3.0));
-
-    float d = RayMarch(p + n * 0.02, normalize(lightPos)).dist;
-    if (d < length(lightPos - p)) return ambient + fresnel;
-
-    return diffuse + ambient + specular + fresnel;
-}
-
 vec3 getNormal(vec3 p) {
     vec2 e = vec2(EPSILON, 0.0);
     vec3 n = vec3(map(p).dist) - vec3(map(p - e.xyy).dist, map(p - e.yxy).dist, map(p - e.yyx).dist);
     return normalize(n);
+}
+float getAmbientOcclusion(vec3 p, vec3 normal) {
+    float occ = 0.0;
+    float weight = 1.0;
+    for (int i = 0; i < 8; i++) {
+        float len = 0.01 + 0.02 * float(i * i);
+        float dist = map(p + normal * len).dist;
+        occ += (len - dist) * weight;
+        weight *= 0.85;
+    }
+    return 1.0 - clamp(0.6 * occ, 0.0, 1.0);
+}
+float getSoftShadow(vec3 p, vec3 lightPos) {
+    float res = 1.0;
+    float dist = 0.01;
+    float lightSize = 0.03;
+    for (int i = 0; i < MAX_STEPS; i++) {
+        float hit = map(p + lightPos * dist).dist;
+        res = min(res, hit / (dist * lightSize));
+        dist += hit;
+        if (hit < 0.0001 || dist > 60.0) break;
+    }
+    return clamp(res, 0.0, 1.0);
+}
+vec3 getLight(vec3 p, vec3 rd, vec3 color) {
+    vec3 lightPos = vec3(20.0, 55.0, -25.0);
+    vec3 L = normalize(lightPos - p);
+    vec3 N = getNormal(p);
+    vec3 V = -rd;
+    vec3 R = reflect(-L, N);
+
+    vec3 specColor = vec3(0.6, 0.5, 0.4);
+    vec3 specular = 1.3 * specColor * pow(clamp(dot(R, V), 0.0, 1.0), 10.0);
+    vec3 diffuse = 0.9 * color * clamp(dot(L, N), 0.0, 1.0);
+    vec3 ambient = 0.05 * color;
+    vec3 fresnel = 0.15 * color * pow(1.0 + dot(rd, N), 3.0);
+
+    float shadow = getSoftShadow(p + N * 0.02, normalize(lightPos));
+    float occ = getAmbientOcclusion(p, N);
+    vec3 back = 0.05 * color * clamp(dot(N, -L), 0.0, 1.0);
+
+    return  (back + ambient + fresnel) * occ + (specular * occ + diffuse) * shadow;
 }
 
 void main(){
@@ -145,10 +169,9 @@ void main(){
     Hit hit = RayMarch(ro, rd);
     float dist = hit.dist;
     vec3 p = ro + rd * dist;
-    vec3 n = getNormal(p);
 
     if (dist < MAX_DIST) {
-        color = getLight(p, rd, n, hit.color);
+        color = getLight(p, rd, hit.color);
         color = mix(color, vec3(0.0, 0.5, 1.0), 1.0-exp(-0.00008 * dist * dist));
     }
     else {

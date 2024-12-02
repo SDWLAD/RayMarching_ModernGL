@@ -66,36 +66,3 @@ class Engine:
 if __name__ == '__main__':
     engine = Engine()
     engine.run()
-
-# class App(mglw.WindowConfig):
-#     window_size = 1920, 1080
-#     resource_dir = 'shaders'
-#     fullscreen = True
-#     vsync = True
-
-#     def __init__(self, **kwargs):
-#         super().__init__(**kwargs)
-#         self.quad = mglw.geometry.quad_fs()
-#         self.prog = self.load_program(vertex_shader='v.glsl', fragment_shader='f.glsl')
-#         self.set_uniform('resolution', self.window_size)
-
-#         self.camera = Camera((0, 2, -10), (0, 0, 0))
-
-#     def set_uniform(self, u_name, u_value):
-#         try:
-#             self.prog[u_name] = u_value
-#         except KeyError:...
-    
-#     def render(self, time, frame_time):
-#         self.ctx.clear() 
-
-#         self.set_uniform('ro', self.camera.position)
-#         self.set_uniform('rot',self.camera.rotation)
-
-#         self.quad.render(self.prog)
-    
-#     def mouse_drag_event(self, x: int, y: int, dx: int, dy: int):
-#         self.camera.rotation = (self.camera.rotation[0] + x/100, self.camera.rotation[1] + y/100, self.camera.rotation[2])
-
-# if __name__ == '__main__':
-#     mglw.run_window_config(App)
