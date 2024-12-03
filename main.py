@@ -28,6 +28,11 @@ class Engine:
 
         self.prog['resolution'] = self.screen_size
 
+        self.texture = self.ctx.texture((4, 4), 4, pg.image.tobytes(pg.image.load('map.png'), 'RGBA'))
+        self.texture.filter = (mgl.NEAREST, mgl.NEAREST)
+        self.prog['shapes'] = 0
+        self.texture.use(0)
+
         self.vao = self.ctx.simple_vertex_array(self.prog, self.ctx.buffer(np.array([[-1, -1], [1, -1], [-1, 1], [1, 1]], dtype=np.float32)), 'in_vert')
 
     def get_program(self):

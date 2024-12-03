@@ -4,9 +4,11 @@ uniform vec2 resolution;
 uniform vec3 ro;
 uniform vec3 rot;
 
-const int MAX_STEPS = 256;
-const float MAX_DIST = 500;
-const float EPSILON = 0.001;
+uniform sampler2D shapes;
+
+const int MAX_STEPS = 128;
+const float MAX_DIST = 256;
+const float EPSILON = 0.01;
 
 void pR(inout vec2 p, float a) {
 	p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
@@ -75,23 +77,20 @@ float shapeDist(Shape s, vec3 p) {
 }
 
 Shape map(vec3 p) {
-    Shape sphere = Shape(vec3(0, 3, 0), vec3(1.3), vec3(1, 0, 0), 0, 0);
-    sphere.dist = shapeDist(sphere, p);
 
-    Shape box = Shape(vec3(0, 0, 0), vec3(1, 1, 1), vec3(0, 0, 1), 1, 0);
-    box.dist = shapeDist(box, p);
+    Shape shapesInScene[4];
+    for (int i = 0; i < 4; i++) {
+        vec3 position = texture(shapes, vec2(0.00, i*0.33)).xyz*256-128;
+        vec3 size   =   texture(shapes, vec2(0.33, i*0.33)).xyz*256-128;
+        vec3 color  =   texture(shapes, vec2(0.66, i*0.33)).xyz;
+        int type   =int(texture(shapes, vec2(1.00, i*0.33 )).x*256);
+        shapesInScene[i] = Shape(position, size, color, type, 0);
+        shapesInScene[i].dist = shapeDist(shapesInScene[i], p);
+    }
 
-    Shape torus = Shape(vec3(0, 4, 0), vec3(4, 0.6, 0), vec3(0, 1, 0), 2, 0);
-    torus.dist = shapeDist(torus, p);
+    Shape final_shape = shapesInScene[1];
 
-    Shape plane = Shape(vec3(0, -1, 0), vec3(0), vec3(1, 1, 1), 3, 0);
-    plane.dist = shapeDist(plane, p);
-
-    Shape sphere_X_box = SoftUnion(sphere, box, 2);
-    Shape previous_X_torus = Union(sphere_X_box, torus);
-    Shape previous_X_plane = Union(previous_X_torus, plane);
-
-    return previous_X_plane;
+    return final_shape;
 }
 
 Hit RayMarch(vec3 ro, vec3 rd){
