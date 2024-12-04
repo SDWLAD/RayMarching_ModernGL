@@ -1,10 +1,8 @@
-#version 330
+#version 330 core
 
 uniform vec2 resolution;
 uniform vec3 ro;
 uniform vec3 rot;
-
-uniform sampler2D shapes;
 
 const int MAX_STEPS = 128;
 const float MAX_DIST = 256;
@@ -21,6 +19,8 @@ struct Shape {
     int type;
     float dist;
 };
+
+uniform Shape shapes[4];
 
 struct Hit {
     float dist;
@@ -78,17 +78,16 @@ float shapeDist(Shape s, vec3 p) {
 
 Shape map(vec3 p) {
 
-    Shape shapesInScene[4];
-    for (int i = 0; i < 4; i++) {
-        vec3 position = texture(shapes, vec2(0.00, i*0.33)).xyz*256-128;
-        vec3 size   =   texture(shapes, vec2(0.33, i*0.33)).xyz*256-128;
-        vec3 color  =   texture(shapes, vec2(0.66, i*0.33)).xyz;
-        int type   =int(texture(shapes, vec2(1.00, i*0.33 )).x*256);
-        shapesInScene[i] = Shape(position, size, color, type, 0);
-        shapesInScene[i].dist = shapeDist(shapesInScene[i], p);
+    Shape previousShape = shapes[0];
+    previousShape.dist = shapeDist(previousShape, p);
+
+    for (int i = 1; i < 4; i++) {
+        Shape nowShape = shapes[i];
+        nowShape.dist = shapeDist(nowShape, p);    
+        previousShape = Union(previousShape, nowShape);
     }
 
-    Shape final_shape = shapesInScene[1];
+    Shape final_shape = previousShape;
 
     return final_shape;
 }
