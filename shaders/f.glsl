@@ -17,6 +17,7 @@ struct Shape {
     vec3 size;
     vec3 color;
     int type;
+    int combinationType;
     float dist;
 };
 
@@ -45,7 +46,7 @@ Shape SoftUnion(Shape a, Shape b, float k) {
 
     float blendDst = mix( b.dist, a.dist, h ) - k*h*(1.0-h);
     vec3 blendCol = mix(b.color,a.color,h);
-    return Shape(b.position, b.size, blendCol, b.type, blendDst);;
+    return Shape(b.position, b.size, blendCol, b.type, a.combinationType, blendDst);
 }
 
 
@@ -75,6 +76,12 @@ float shapeDist(Shape s, vec3 p) {
     if (s.type == 2) return torusDist(p, s.position, s.size.xy);
     if (s.type == 3) return planeDist(p, s.position.y);
 }
+Shape shapeCombination(Shape a, Shape b) {
+    if (b.combinationType == 0) return Union(a, b);
+    if (b.combinationType == 1) return Intersect(a, b);
+    if (b.combinationType == 2) return Substract(a, b);
+    if (b.combinationType == 3) return SoftUnion(a, b, 0.8);
+}
 
 Shape map(vec3 p) {
 
@@ -84,7 +91,7 @@ Shape map(vec3 p) {
     for (int i = 1; i < 4; i++) {
         Shape nowShape = shapes[i];
         nowShape.dist = shapeDist(nowShape, p);    
-        previousShape = Union(previousShape, nowShape);
+        previousShape = shapeCombination(previousShape, nowShape);
     }
 
     Shape final_shape = previousShape;
@@ -93,7 +100,7 @@ Shape map(vec3 p) {
 }
 
 Hit RayMarch(vec3 ro, vec3 rd){
-    Shape hit = Shape(vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0), 0, 0);
+    Shape hit = Shape(vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0), 0, 0, 0);
     Hit object=Hit(0, 0, vec3(0));
     for (int i = 0; i < MAX_STEPS; i++) {
         vec3 p = ro + object.dist * rd;
