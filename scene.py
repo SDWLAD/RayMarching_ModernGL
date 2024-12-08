@@ -17,7 +17,6 @@ class Scene:
         with open(path) as f:
             scene:dict = json.load(f)
             self.shapes = list(scene.values())
-        print(self.shapes)
     
     @staticmethod
     def encode_types(type):

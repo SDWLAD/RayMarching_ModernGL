@@ -7,12 +7,12 @@ import numpy as np
 from scene import Scene
 
 class Engine:
-    screen_size = (1920, 1080)
+    screen_size = (800, 600)
 
     def __init__(self):
         pg.init()
 
-        self.screen = pg.display.set_mode(self.screen_size, DOUBLEBUF | OPENGL | FULLSCREEN, vsync=1)
+        self.screen = pg.display.set_mode(self.screen_size, DOUBLEBUF | OPENGL, vsync=1)
         self.ctx = mgl.create_context()
 
         self.clock = pg.time.Clock()
@@ -56,6 +56,8 @@ class Engine:
     def update(self):
         self.prog['ro'] = self.camera.position
         self.prog['rot'] = self.camera.rotation
+
+        pg.display.set_caption(f'FPS: {int(self.clock.get_fps())}')
 
         self.camera.update()
 
