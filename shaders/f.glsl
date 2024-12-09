@@ -21,7 +21,8 @@ struct Shape {
     float dist;
 };
 
-uniform Shape shapes[4];
+const int SHAPES_AMOUNT = 6;
+uniform Shape shapes[SHAPES_AMOUNT];
 
 struct Hit {
     float dist;
@@ -38,7 +39,7 @@ Shape Intersect(Shape a, Shape b) {
 }
 
 Shape Substract(Shape a, Shape b) {
-    return (-a.dist < b.dist) ? b : a;
+    return (a.dist < -b.dist) ? b : a;
 }
 
 Shape SoftUnion(Shape a, Shape b, float k) {
@@ -88,7 +89,7 @@ Shape map(vec3 p) {
     Shape previousShape = shapes[0];
     previousShape.dist = shapeDist(previousShape, p);
 
-    for (int i = 1; i < 4; i++) {
+    for (int i = 1; i < SHAPES_AMOUNT; i++) {
         Shape nowShape = shapes[i];
         nowShape.dist = shapeDist(nowShape, p);    
         previousShape = shapeCombination(previousShape, nowShape);

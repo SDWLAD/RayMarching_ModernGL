@@ -26,6 +26,8 @@ class Scene:
             "Torus":2,
             "Plane":3,
             "Union":0,
+            "Intersect":1,
+            "Substract":2,
             "SoftUnion":3
         }
         return types[type]
