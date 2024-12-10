@@ -12,8 +12,15 @@ void pR(inout vec2 p, float a) {
 	p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
 }
 
+mat2 Rotate(float a) {
+    float s = sin(a);
+    float c = cos(a);
+    return mat2(c, -s, s, c);
+}
+
 struct Shape {
     vec3 position;
+    vec3 rotation;
     vec3 size;
     vec3 color;
     int type;
@@ -39,7 +46,11 @@ Shape Intersect(Shape a, Shape b) {
 }
 
 Shape Substract(Shape a, Shape b) {
-    return (a.dist < -b.dist) ? b : a;
+    a.dist = max(a.dist, -b.dist);
+    if (a.dist <= -b.dist) {
+        a.color = b.color;
+    }
+    return a;
 }
 
 Shape SoftUnion(Shape a, Shape b, float k) {
@@ -47,10 +58,33 @@ Shape SoftUnion(Shape a, Shape b, float k) {
 
     float blendDst = mix( b.dist, a.dist, h ) - k*h*(1.0-h);
     vec3 blendCol = mix(b.color,a.color,h);
-    return Shape(b.position, b.size, blendCol, b.type, a.combinationType, blendDst);
+    b.color = blendCol;
+    b.dist = blendDst;
+
+    return b;
 }
 
+Shape SoftIntersect(Shape a, Shape b, float k) {
+    float h = clamp( 0.5-0.5*(b.dist-a.dist)/k, 0.0, 1.0 );
 
+    float blendDst = mix( b.dist, a.dist, h ) - k*h*(1.0-h);
+    vec3 blendCol = mix(b.color,a.color,h);
+    b.color = blendCol;
+    b.dist = blendDst;
+
+    return b;
+}
+
+Shape SoftSubstract(Shape a, Shape b, float k) {
+    float h = clamp( 0.5-0.5*(a.dist+b.dist)/k, 0.0, 1.0 );
+
+    float blendDst = mix( a.dist, -b.dist, h ) + k*h*(1.0-h);
+    vec3 blendCol = mix(a.color,b.color,h);
+    b.color = blendCol;
+    b.dist = blendDst;
+
+    return b;
+}
 
 float sphereDist(vec3 p, vec3 position, float radius) {
     return length(p-position) - radius;
@@ -82,6 +116,8 @@ Shape shapeCombination(Shape a, Shape b) {
     if (b.combinationType == 1) return Intersect(a, b);
     if (b.combinationType == 2) return Substract(a, b);
     if (b.combinationType == 3) return SoftUnion(a, b, 0.8);
+    if (b.combinationType == 4) return SoftIntersect(a, b, 0.8);
+    if (b.combinationType == 5) return SoftSubstract(a, b, 0.8);
 }
 
 Shape map(vec3 p) {
@@ -91,7 +127,7 @@ Shape map(vec3 p) {
 
     for (int i = 1; i < SHAPES_AMOUNT; i++) {
         Shape nowShape = shapes[i];
-        nowShape.dist = shapeDist(nowShape, p);    
+        nowShape.dist = shapeDist(nowShape, p);
         previousShape = shapeCombination(previousShape, nowShape);
     }
 
@@ -101,7 +137,7 @@ Shape map(vec3 p) {
 }
 
 Hit RayMarch(vec3 ro, vec3 rd){
-    Shape hit = Shape(vec3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0), 0, 0, 0);
+    Shape hit;
     Hit object=Hit(0, 0, vec3(0));
     for (int i = 0; i < MAX_STEPS; i++) {
         vec3 p = ro + object.dist * rd;

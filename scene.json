@@ -1,6 +1,7 @@
 {
     "Torus1":{
         "position" : [0, 5, 0],
+        "rotation" : [0, 0, 0],
         "size" : [4, 0.6, 0],
         "color": [0, 1, 0],
         "type" : "Torus",
@@ -8,13 +9,15 @@
     },
     "Box2":{
         "position" : [0, 4.5, 0],
+        "rotation" : [0, 0, 0],
         "size" : [5, 0.5, 5],
         "color": [0, 0, 1],
         "type" : "Box",
-        "combinationType":"Intersect"
+        "combinationType":"SoftIntersect"
     },
     "Sphere1":{
         "position" : [0, 3, 0],
+        "rotation" : [0, 0, 0],
         "size" : [1.3, 1.3, 1.3],
         "color": [1, 0, 0],
         "type" : "Sphere",
@@ -22,6 +25,7 @@
     },
     "Box1":{
         "position" : [0, 1, 0],
+        "rotation" : [0, 0, 0],
         "size" : [1, 1, 1],
         "color": [0, 0, 1],
         "type" : "Box",
@@ -29,13 +33,15 @@
     },
     "Sphere2":{
         "position" : [0, 1, -1],
+        "rotation" : [0, 0, 0],
         "size" : [0.5, 0.5, 0.5],
         "color": [1, 1, 0],
         "type" : "Sphere",
-        "combinationType":"Substract"
+        "combinationType":"SoftSubstract"
     },
     "Plane":{
         "position" : [0, 0, 0],
+        "rotation" : [0, 0, 0],
         "size" : [0, 0, 0],
         "color": [1, 1, 1],
         "type" : "Plane",

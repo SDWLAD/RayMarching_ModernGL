@@ -8,6 +8,7 @@ class Scene:
 
         for i in range(len(self.shapes)):
             prog[f"shapes[{i}].position"] = self.shapes[i]["position"]
+            prog[f"shapes[{i}].rotation"] = self.shapes[i]["rotation"]
             prog[f"shapes[{i}].size"] = self.shapes[i]["size"]
             prog[f"shapes[{i}].color"] = self.shapes[i]["color"]
             prog[f"shapes[{i}].type"] = self.encode_types(self.shapes[i]["type"])
@@ -25,9 +26,12 @@ class Scene:
             "Box":1,
             "Torus":2,
             "Plane":3,
+
             "Union":0,
             "Intersect":1,
             "Substract":2,
-            "SoftUnion":3
+            "SoftUnion":3,
+            "SoftIntersect":4,
+            "SoftSubstract":5,
         }
         return types[type]
