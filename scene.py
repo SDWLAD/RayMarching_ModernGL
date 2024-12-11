@@ -11,7 +11,8 @@ class Scene:
             prog[f"shapes[{i}].rotation"] = self.shapes[i]["rotation"]
             prog[f"shapes[{i}].size"] = self.shapes[i]["size"]
             prog[f"shapes[{i}].color"] = self.shapes[i]["color"]
-            prog[f"shapes[{i}].type"] = self.encode_types(self.shapes[i]["type"])
+            prog[f"shapes[{i}].type"] = [self.encode_types(self.shapes[i]["type"]), int(self.shapes[i]["rotation"] == [0, 0, 0]), 0]
+            print([self.encode_types(self.shapes[i]["type"]), int(self.shapes[i]["rotation"] == [0, 0, 0]), 0])
             prog[f"shapes[{i}].combinationType"] = self.encode_types(self.shapes[i]["combinationType"])
         
     def load_scene(self, path):

@@ -5,17 +5,11 @@ uniform vec3 ro;
 uniform vec3 rot;
 
 const int MAX_STEPS = 128;
-const float MAX_DIST = 256;
+const float MAX_DIST = 128;
 const float EPSILON = 0.01;
 
 void pR(inout vec2 p, float a) {
 	p = cos(a)*p + sin(a)*vec2(p.y, -p.x);
-}
-
-mat2 Rotate(float a) {
-    float s = sin(a);
-    float c = cos(a);
-    return mat2(c, -s, s, c);
 }
 
 struct Shape {
@@ -23,7 +17,7 @@ struct Shape {
     vec3 rotation;
     vec3 size;
     vec3 color;
-    int type;
+    vec3 type;
     int combinationType;
     float dist;
 };
@@ -105,11 +99,23 @@ float planeDist(vec3 p, float position) {
     return p.y - position;
 }
 
+vec3 transformP(vec3 p, vec3 rot){
+    vec3 finalP = p;
+
+    pR(finalP.yz, rot.x);
+    pR(finalP.xz, rot.y);
+    pR(finalP.xy, rot.z);
+
+    return finalP;
+}
+
 float shapeDist(Shape s, vec3 p) {
-    if (s.type == 0) return sphereDist(p, s.position, s.size.x);
-    if (s.type == 1) return boxDist(p, s.position, s.size);
-    if (s.type == 2) return torusDist(p, s.position, s.size.xy);
-    if (s.type == 3) return planeDist(p, s.position.y);
+    if (s.type.y == 0) p = transformP(p, s.rotation);
+
+    if (s.type.x == 0) return sphereDist(p, s.position, s.size.x);
+    if (s.type.x == 1) return boxDist(p, s.position, s.size);
+    if (s.type.x == 2) return torusDist(p, s.position, s.size.xy);
+    if (s.type.x == 3) return planeDist(p, s.position.y);
 }
 Shape shapeCombination(Shape a, Shape b) {
     if (b.combinationType == 0) return Union(a, b);
@@ -156,25 +162,21 @@ vec3 getNormal(vec3 p) {
     return normalize(n);
 }
 float getAmbientOcclusion(vec3 p, vec3 normal) {
-    float occ = 0.0;
-    float weight = 1.0;
+    float occ = 0.0, weight = 1.0;
     for (int i = 0; i < 8; i++) {
         float len = 0.01 + 0.02 * float(i * i);
-        float dist = map(p + normal * len).dist;
-        occ += (len - dist) * weight;
+        occ += (len - map(p + normal * len).dist) * weight;
         weight *= 0.85;
     }
     return 1.0 - clamp(0.6 * occ, 0.0, 1.0);
 }
 float getSoftShadow(vec3 p, vec3 lightPos) {
-    float res = 1.0;
-    float dist = 0.01;
-    float lightSize = 0.03;
-    for (int i = 0; i < MAX_STEPS; i++) {
+    float res = 1.0, dist = 0.01, lightSize = 0.03, maxDist = 60.0;
+    for (int i = 0; i < MAX_STEPS && dist < maxDist; i++) {
         float hit = map(p + lightPos * dist).dist;
         res = min(res, hit / (dist * lightSize));
         dist += hit;
-        if (hit < 0.0001 || dist > 60.0) break;
+        if (hit < 0.0001) break;
     }
     return clamp(res, 0.0, 1.0);
 }
@@ -185,40 +187,35 @@ vec3 getLight(vec3 p, vec3 rd, vec3 color) {
     vec3 V = -rd;
     vec3 R = reflect(-L, N);
 
-    vec3 specColor = vec3(0.6, 0.5, 0.4);
-    vec3 specular = 1.3 * specColor * pow(clamp(dot(R, V), 0.0, 1.0), 10.0);
-    vec3 diffuse = 0.9 * color * clamp(dot(L, N), 0.0, 1.0);
+    float NdotL = dot(N, L);
+    float RdotV = clamp(dot(R, V), 0.0, 1.0);
+    float shadow = getSoftShadow(p + N * 0.02, normalize(lightPos));
+    float occ = getAmbientOcclusion(p, N);
+
+    vec3 specular = 1.3 * vec3(0.6, 0.5, 0.4) * pow(RdotV, 10.0);
+    vec3 diffuse = 0.9 * color * clamp(NdotL, 0.0, 1.0);
     vec3 ambient = 0.05 * color;
     vec3 fresnel = 0.15 * color * pow(1.0 + dot(rd, N), 3.0);
 
-    float shadow = getSoftShadow(p + N * 0.02, normalize(lightPos));
-    float occ = getAmbientOcclusion(p, N);
-    vec3 back = 0.05 * color * clamp(dot(N, -L), 0.0, 1.0);
-
-    return  (back + ambient + fresnel) * occ + (specular * occ + diffuse) * shadow;
+    return (0.05 * color * clamp(dot(N, -L), 0.0, 1.0) + ambient + fresnel) * occ + (specular * occ + diffuse) * shadow;
 }
 
 void main(){
     vec2 uv = (2.0 * gl_FragCoord.xy - resolution.xy) / resolution.y;
-    vec3 color = vec3(0.0, 0.5, 1.0);
 
     vec3 rd = normalize(vec3(uv, 1));
+    vec3 color = vec3(0.0, 0.5, 1.0)-max(0.4 * rd.y, 0.0);
 
     pR(rd.yz, rot.x);
     pR(rd.xz, rot.y);
-    pR(rd.xy, rot.z);
 
     Hit hit = RayMarch(ro, rd);
     float dist = hit.dist;
     vec3 p = ro + rd * dist;
 
-    if (dist < MAX_DIST) {
+    if (dist < MAX_DIST) 
         color = getLight(p, rd, hit.color);
-        color = mix(color, vec3(0.0, 0.5, 1.0), 1.0-exp(-0.00008 * dist * dist));
-    }
-    else {
-        color -= max(0.4 * rd.y, 0.0);
-    }
+    
 
     gl_FragColor = vec4(pow(color, vec3(1/2.2)), 1);
 }
